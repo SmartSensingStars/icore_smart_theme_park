@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.ParamDao">
+
+    <resultMap type="Param" id="mapParam">
+        <id property="paramId" column="param_id"/>
+        <result property="name" column="param_name"/>
+        <result property="price" column="param_price"/>
+        <result property="createdAt" column="param_created_at"/>
+        <result property="updatedAt" column="param_updated_at"/>
+        <result property="createdBy" column="param_created_by"/>
+        <result property="updatedBy" column="param_updated_by"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_param
+        (
+        param_name,
+        param_price,
+        param_created_at,
+        param_created_by
+        )
+        VALUES(
+        #{name},
+        #{price},
+        #{createdAt},
+        #{createdBy}
+        )
+        <selectKey resultType="int" keyProperty="paramId">
+            select currval('mss_param_param_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_param
+        WHERE
+            param_id=#{paramId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_param
+        <set>
+            <if test="name != null">param_name = #{name},</if>
+            <if test="price != null">param_price = #{price},</if>
+            <if test="updatedAt != null">param_updated_at = #{updatedAt},</if>
+            <if test="updatedBy != null">param_updated_by = #{updatedBy}</if>
+        </set>
+        WHERE
+        param_id=#{paramId}
+    </update>
+
+
+    <select id="get" parameterType="map" resultMap="mapParam">
+        SELECT
+        *
+
+        FROM
+        mss_param
+        <where>
+            <if test="paramId !=null">param_id=#{paramId}</if>
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapParam">
+        SELECT
+        *
+        FROM
+        mss_param
+
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_param
+
+    </select>
+</mapper>

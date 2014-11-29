@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.TerminalEventDao">
+
+    <resultMap type="TerminalEvent" id="mapTerminalEvent">
+        <id property="terminalEventId" column="terminal_event_id"/>
+        <result property="typeId" column="terminal_event_type_id"/>
+        <result property="typeName" column="terminal_event_type_name"/>
+        <result property="terminalId" column="terminal_event_terminal_id"/>
+        <result property="createdAt" column="terminal_event_created_at"/>
+    </resultMap>
+
+    <!-- <resultMap type="Group" id="mapGroupEx" extends="mapGroup">
+        <association property="createdBy" javaType="User" resultMap="mss.framework.server.dao.UserDao.mapUser"/>
+    </resultMap>-->
+
+    <insert id="add" parameterType="map">
+        insert into mss_terminal_event
+        (
+        terminal_event_type_id,
+        terminal_event_terminal_id,
+
+        terminal_event_created_at
+        )
+        values(
+        #{typeId},
+        #{terminalId},
+
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="TerminalEventId">
+            select currval('mss_terminal_event_terminal_event_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map" >
+		DELETE
+		FROM
+		     mss_terminal_event
+		WHERE
+            terminal_event_id = #{terminalEventId}
+	</delete>
+
+    <update id="update" parameterType="map">
+
+    </update>
+
+    <select id="get" parameterType="map"  resultMap="mapTerminalEvent">
+		SELECT
+		*
+		FROM mss_terminal_event
+
+		WHERE
+            terminal_event_id = #{terminalEventId}
+	</select>
+
+    <select id="list" parameterType="map" resultMap="mapTerminalEvent">
+
+        SELECT
+        *,
+        event_type_name as terminal_event_type_name
+        FROM
+        mss_terminal_event
+        INNER JOIN mss_event_type ON terminal_event_type_id=event_type_id
+        <where>
+            terminal_event_terminal_id=#{terminalId}
+            <if test="terminal_event_type_id != null">AND terminal_event_type_id=#{typeId}</if>
+            AND terminal_event_created_at &lt;= #{createdAtTo} AND terminal_event_created_at &gt;= #{createdAtFrom}
+        </where>
+        ORDER BY ${sortingField} ${sortingDirection}
+        LIMIT #{pageSize} OFFSET (#{pageNumber}-1)*#{pageSize};
+    </select>
+
+    <select id="count" parameterType="map" resultType="Integer">
+        SELECT
+        count(*)
+        FROM
+        mss_terminal_event
+
+        <where>
+            terminal_event_terminal_id=#{terminalId}
+            <if test="terminal_event_type_id != null">AND terminal_event_type_id=#{typeId}</if>
+            AND terminal_event_created_at &lt;= #{createdAtTo} AND terminal_event_created_at &gt;= #{createdAtFrom}
+        </where>
+    </select>
+
+
+
+</mapper>

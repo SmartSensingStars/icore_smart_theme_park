@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.larcloud.dao.postgresql.TaskDao">
+    <resultMap type="Task" id="mapTask">
+        <id property="taskId" column="task_id" />
+        <result property="name" column="task_name" />
+        <result property="status" column="task_status" />
+        <result property="typeId" column="task_type_id" />
+        <result property="data" column="task_data" />
+        <result property="terminalListData" column="task_terminal_list_data" />
+        <result property="createdAt" column="task_created_at" />
+        <result property="updatedAt" column="task_updated_at" />
+
+        <association property="createdBy" javaType="User" resultMap="com.larcloud.dao.postgresql.UserDao.mapUser"/>
+    </resultMap>
+
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_task
+        (
+        task_name,
+        task_status,
+        task_type_id,
+        task_data,
+        task_terminal_list_data,
+        task_created_at,
+        task_created_by
+        )
+        VALUES(
+        #{name},
+        #{status},
+        #{typeId},
+        #{data},
+        #{terminalListData},
+        #{createdAt} ,
+        #{createdBy}
+        )
+        <selectKey resultType="int" keyProperty="taskId">
+            select currval('mss_task_task_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_task
+        WHERE
+            task_id=#{taskId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_task
+        <set>
+            <if test="name != null">task_name = #{name},</if>
+            <if test="status != null">task_status = #{status},</if>
+            <if test="typeId != null">task_type_id = #{typeId},</if>
+            <if test="data != null">task_data = #{data},</if>
+            <if test="terminalListData!= null">task_terminal_list_data = #{terminalListData}, </if>
+            <if test="updatedAt != null">task_updated_at = #{updatedAt} </if>
+        </set>
+        WHERE
+        task_id=#{taskId}
+    </update>
+
+
+    <select id="get" parameterType="map" resultMap="mapTask">
+		SELECT
+		*
+		FROM
+		mss_task
+		LEFT JOIN mss_user ON task_created_by = user_id
+		WHERE
+		task_id=#{taskId}
+	</select>
+
+    <select id="list" parameterType="map" resultMap="mapTask">
+        SELECT
+        *
+        FROM
+        mss_task
+        LEFT JOIN mss_user ON task_created_by = user_id
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_task
+
+    </select>
+</mapper>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.OrderItemDao">
+
+    <resultMap type="OrderItem" id="mapOrderItem">
+        <id property="orderItemId" column="order_item_id"/>
+        <result property="productId" column="order_item_product_id"/>
+        <result property="quantity" column="order_item_quantity"/>
+        <result property="unitPrice" column="order_item_unit_price"/>
+        <result property="orderId" column="order_item_order_id"/>
+        <result property="createdAt" column="order_item_created_at"/>
+        <association property="product" javaType="ProgramItem" resultMap="com.larcloud.dao.postgresql.ProgramItemDao.mapProgramItem"/>
+        <association property="createdBy" javaType="User" resultMap="com.larcloud.dao.postgresql.UserDao.mapUser"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_order_item
+        (
+        order_item_product_id,
+        order_item_quantity,
+        order_item_unit_price,
+        order_item_order_id,
+        order_item_created_at,
+        order_item_created_by
+        )
+        VALUES(
+        #{productId},
+        1,
+        0,
+        #{orderId},
+        #{createdAt},
+        #{createdBy}
+        )
+        <selectKey resultType="int" keyProperty="orderItemId">
+            select currval('mss_order_item_order_item_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_order_item
+        WHERE
+            order_item_id=#{orderItemId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_order_item
+        <set>
+            <if test="status != null">order_item_status = #{status}</if>
+
+        </set>
+        WHERE
+        order_item_id = #{orderItemId}
+    </update>
+
+
+
+
+
+    <select id="get" parameterType="map" resultMap="mapOrderItem">
+        SELECT
+        *
+
+        FROM
+        mss_order_item
+
+        INNER JOIN mss_user ON order_created_by=user_id
+        <where>
+            <if test="orderItemId !=null">order_item_id=#{orderItemId}</if>
+
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapOrderItem">
+        SELECT
+        *
+        FROM
+        mss_order_item
+        INNER JOIN mss_program_item ON order_item_product_id=program_item_id
+        INNER JOIN mss_camera ON program_item_camera_id=camera_id
+        INNER JOIN mss_group ON camera_group_id=group_id
+        INNER JOIN mss_user ON order_item_created_by=user_id
+
+        <where>
+
+            <if test="orderId!=null">order_item_order_id=#{orderId}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_order_item
+
+        <where>
+
+            <if test="orderId!=null">order_item_order_id=#{orderId}</if>
+        </where>
+    </select>
+</mapper>

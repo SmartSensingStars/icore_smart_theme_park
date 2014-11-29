@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.larcloud.dao.postgresql.TerminalVersionDao">
+	<resultMap type="TerminalVersion" id="mapTerminalVersion">
+		<id property="terminalVersionId" column="terminal_version_id" />
+		<result property="name" column="terminal_version_name" />
+		<!--<result property="code" column="TYPE_CODE" />-->
+		<!--<result property="hardwareName" column="TYPE_HARDWARE" />-->
+		<result property="softwareName" column="terminal_version_softwarename" />
+		<!--<result property="fileName" column="TYPE_FILENAME" />-->
+		<result property="fileSize" column="terminal_version_filesize" />
+		<result property="fileUrl" column="terminal_version_fileurl" />
+		<result property="fileMd5" column="terminal_version_filemd5" />
+		<!--<result property="comment" column="TYPE_REMARK" />-->
+		<!--<result property="deleted" column="TYPE_ISDEL" />-->
+        <result property="createdAt" column="terminal_version_created_at" />
+        <result property="updatedAt" column="terminal_version_updated_at" />
+
+    </resultMap>
+
+
+	<insert id="add" parameterType="map">
+		INSERT INTO
+		mss_terminal_version
+        (
+        terminal_version_name,
+        terminal_version_softwarename,
+        terminal_version_filesize,
+        terminal_version_fileurl,
+        terminal_version_filemd5,
+        terminal_version_created_at)
+		VALUES(
+			#{name},
+			#{softwareName},
+			#{fileSize},
+			#{fileUrl},
+			#{fileMd5},
+			#{createdAt},
+			#{updatedAt})
+        <selectKey resultType="int" keyProperty="terminalVersionId">
+            select currval('mss_terminal_version_terminal_version_id_seq')
+        </selectKey>
+
+	</insert>
+	
+
+	<update id="update" parameterType="map">
+		UPDATE
+		    mss_terminal_version
+		SET
+			terminal_version_name = #{name},
+			terminal_version_softwarename = #{softwareName},
+			terminal_version_filesize = #{fileSize},
+			terminal_version_fileurl = #{fileUrl},
+			terminal_version_filemd5 = #{fileMd5},
+			terminal_version_updated_at = #{updatedAt}
+		WHERE
+		  terminal_version_id = #{terminalVersionId}
+	</update>
+	
+
+	
+	<update id="delete" parameterType="map">
+  	    DELETE FROM
+            mss_terminal_version
+        WHERE
+            terminal_version_id=#{terminalVersionId}
+	</update>
+
+	<select id="get" parameterType="map" resultMap="mapTerminalVersion">
+		SELECT *
+        FROM
+        mss_terminal_version
+        <where>
+            <if test="terminalVersionId != null">terminal_version_id = #{terminalVersionId} </if>
+        </where>
+	</select>
+
+
+    <select id="list" parameterType="map" resultMap="mapTerminalVersion">
+        SELECT
+        *
+        FROM
+        mss_terminal_version
+
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="Integer">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_terminal_version
+    </select>
+</mapper>

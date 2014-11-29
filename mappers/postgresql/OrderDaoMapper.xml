@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.OrderDao">
+
+    <resultMap type="Order" id="mapOrder">
+        <id property="orderId" column="order_id"/>
+        <result property="status" column="order_status"/>
+        <result property="tagNo" column="order_tag_no"/>
+        <result property="createdAt" column="order_created_at"/>
+        <result property="amount" column="order_amount"/>
+        <association property="createdBy" javaType="User" resultMap="com.larcloud.dao.postgresql.UserDao.mapUser"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_order
+        (
+        order_amount,
+        order_tag_no,
+        order_status,
+        order_created_at,
+        order_created_by
+        )
+        VALUES(
+        #{amount},
+        #{tagNo},
+        1,
+        #{createdAt},
+        #{createdBy}
+        )
+        <selectKey resultType="int" keyProperty="orderId">
+            select currval('mss_order_order_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_order
+        WHERE
+            order_id=#{orderId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_order
+        <set>
+            <if test="status != null">order_status = #{status}</if>
+
+        </set>
+        WHERE
+        order_id = #{orderId}
+    </update>
+
+
+
+
+
+    <select id="get" parameterType="map" resultMap="mapOrder">
+        SELECT
+        *
+
+        FROM
+        mss_order
+
+        INNER JOIN mss_user ON order_created_by=user_id
+        <where>
+            <if test="orderId !=null">order_id=#{orderId}</if>
+
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapOrder">
+        SELECT
+        *
+        FROM
+        mss_order
+
+        INNER JOIN mss_user ON order_created_by=user_id
+
+        <where>
+            <if test="status!=null">order_status=#{status}</if>
+            <if test="tagNo!=null">AND order_tag_no = #{tagNo}</if>
+            <if test="createdBy!=null">AND order_created_by=#{createdBy}</if>
+            <if test="createdAtTo!=null">AND order_created_at &lt;= #{createdAtTo}</if>
+            <if test="createdAtFrom!=null">AND order_created_at &gt;= #{createdAtFrom}</if>
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_order
+
+        <where>
+
+            <if test="status!=null">order_status=#{status}</if>
+            <if test="tagNo!=null">AND order_tag_no=#{tagNo}</if>
+            <if test="createdBy!=null">AND order_created_by=#{createdBy}</if>
+            <if test="createdAtTo!=null">AND order_created_at &lt;= #{createdAtTo}</if>
+            <if test="createdAtFrom!=null">AND order_created_at &gt;= #{createdAtFrom}</if>
+
+        </where>
+    </select>
+</mapper>

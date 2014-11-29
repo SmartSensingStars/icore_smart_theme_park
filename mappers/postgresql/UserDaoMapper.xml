@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.UserDao">
+
+    <resultMap type="User" id="mapUser">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="user_username"/>
+        <result property="name" column="user_name"/>
+        <result property="password" column="user_password"/>
+
+        <result property="createdAt" column="user_created_at"/>
+        <result property="createdBy" column="user_created_by"/>
+        <result property="updatedAt" column="user_updated_at"/>
+        <result property="updatedBy" column="user_updated_by"/>
+
+        <result property="phoneNumber" column="user_phone_number"/>
+        <result property="email" column="user_email"/>
+        <association property="role" javaType="Role" resultMap="com.larcloud.dao.postgresql.RoleDao.mapRole"/>
+        <association property="group" javaType="Group" resultMap="com.larcloud.dao.postgresql.GroupDao.mapGroup"/>
+
+    </resultMap>
+
+
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_user
+        (
+        user_username,
+        user_password,
+        user_email,
+        user_name,
+        user_phone_number,
+        user_role_id,
+        user_group_id,
+        user_created_at
+        )
+        VALUES(
+        #{username},
+        #{password},
+        #{email},
+        #{name},
+        #{phoneNumber},
+        #{roleId},
+        #{groupId},
+        #{createdAt}
+
+        )
+        <selectKey resultType="int" keyProperty="userId">
+            select currval('mss_user_user_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_user
+        WHERE
+            user_id=#{userId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_user
+        <set>
+            <if test="password != null">user_password = #{password},</if>
+            <if test="email != null">user_email = #{email},</if>
+            <if test="name != null">user_name = #{name},</if>
+            <if test="phoneNumber != null">user_phone_number = #{phoneNumber},</if>
+            <if test="onlineStatus!= null">user_online_status = #{onlineStatus}, </if>
+            <if test="clientId != null">user_getui_client_id = #{clientId}, </if>
+            <if test="roleId!= null">user_role_id = #{roleId}, </if>
+            <if test="groupId != null">user_group_id = #{groupId}, </if>
+            <if test="updatedBy != null">user_updated_by = #{updatedBy}, </if>
+            <if test="updatedAt != null">user_updated_at = #{updatedAt} </if>
+
+        </set>
+        WHERE
+        user_id = #{userId}
+    </update>
+
+    <update id="updateAccessKey" parameterType="map">
+		UPDATE
+		    mss_user
+		SET
+		    user_access_key = #{accessKey}
+		WHERE user_id = #{userId}
+	</update>
+
+    <update id="updateOnlineStatus" parameterType="map">
+		UPDATE
+		    mss_user
+		SET
+		    user_online_status = #{onlineStatus}
+		WHERE user_id = #{userId}
+	</update>
+
+    <update id="updatePassword" parameterType="map">
+		UPDATE
+		    mss_user
+		SET
+		    user_password = #{password}
+		WHERE user_id = #{userId}
+	</update>
+
+    <select id="get" parameterType="map" resultMap="mapUser">
+		SELECT
+			*
+
+		FROM
+			mss_user
+	    LEFT JOIN mss_role ON user_role_id=role_id
+	    LEFT JOIN mss_group ON user_group_id=group_id
+	    <where>
+            <if test="userId !=null">user_id=#{userId}</if>
+            <if test="username !=null">AND user_username=#{username}</if>
+            <if test="password !=null">AND user_password=#{password}</if>
+	    </where>
+
+	</select>
+
+
+
+
+
+    <select id="list" parameterType="map" resultMap="mapUser">
+		SELECT
+			*
+		FROM
+			mss_user
+        LEFT JOIN mss_role ON user_role_id=role_id
+        LEFT JOIN mss_group ON user_group_id=group_id
+	    <where>
+            <if test="groupId!=null">user_group_id=#{groupId}</if>
+            <if test="groupId__IN!=null">
+            user_group_id IN
+            <foreach collection="groupId__IN" open="(" close=")" item="item" separator="," index="index">
+                #{item}
+            </foreach>
+            </if>
+	    </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+		<if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+	</select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            mss_user
+        <where>
+            <if test="groupId!=null">user_group_id=#{groupId}</if>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.CameraVideoDao">
+
+    <resultMap type="CameraVideo" id="mapCameraVideo">
+        <id property="cameraVideoId" column="camera_video_id"/>
+        <result property="filePath" column="camera_video_file_path"/>
+        <result property="cameraId" column="camera_video_camera_id"/>
+        <result property="startAt" column="camera_video_start_at"/>
+        <result property="endAt" column="camera_video_end_at"/>
+        <result property="createdAt" column="camera_video_created_at"/>
+        <result property="updatedAt" column="camera_video_updated_at"/>
+        <association property="camera" javaType="Camera" resultMap="com.larcloud.dao.postgresql.CameraDao.mapCamera"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_camera_video
+        (
+        camera_video_file_path,
+        camera_video_camera_id,
+        camera_video_start_at,
+        camera_video_created_at
+        )
+        VALUES(
+        #{filePath},
+        #{cameraId},
+        #{startAt},
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="cameraVideoId">
+            select currval('mss_camera_video_camera_video_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_camera_video
+        WHERE
+            camera_video_id=#{cameraVideoId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_camera_video
+        <set>
+            <if test="filePath != null">camera_video_file_path = #{filePath},</if>
+            <if test="startAt != null">camera_video_start_at = #{startAt},</if>
+            <if test="endAt != null">camera_video_end_at = #{endAt},</if>
+            <if test="updatedAt != null">camera_video_updated_at = #{updatedAt},</if>
+            <if test="createdAt != null">camera_video_created_at = #{createdAt}</if>
+        </set>
+        WHERE
+        camera_video_id=#{cameraVideoId}
+    </update>
+
+
+    <select id="get" parameterType="map" resultMap="mapCameraVideo">
+        SELECT
+        *
+        FROM
+        mss_camera_video
+
+        INNER JOIN mss_camera ON camera_video_camera_id=camera_id
+
+        <where>
+            <if test="cameraVideoId !=null">camera_video_id=#{cameraVideoId}</if>
+            <if test="cameraId !=null">AND camera_video_camera_id=#{cameraId}</if>
+
+        </where>
+
+        ORDER BY camera_video_id DESC
+        LIMIT 1
+
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapCameraVideo">
+        SELECT
+        *
+        FROM
+        mss_camera_video
+
+        INNER JOIN mss_camera ON camera_video_camera_id=camera_id
+
+
+        <where>
+
+            <if test="cameraId!=null">camera_video_camera_id=#{cameraId}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_camera_video
+        <where>
+            <if test="cameraId!=null">camera_video_camera_id=#{cameraId}</if>
+        </where>
+    </select>
+</mapper>

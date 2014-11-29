@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.ProgramDao">
+
+    <resultMap type="Program" id="mapProgram">
+        <id property="programId" column="program_id"/>
+        <result property="name" column="program_name"/>
+        <result property="status" column="program_status"/>
+        <result property="createdAt" column="program_created_at"/>
+
+        <result property="tagNo" column="program_tag_no"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_program
+        (
+        program_name,
+        program_tag_no,
+        program_status,
+        program_created_at
+        )
+        VALUES(
+        #{name},
+        #{tagNo},
+        #{status},
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="programId">
+            select currval('mss_program_program_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_user
+        WHERE
+            user_id=#{userId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_user
+        <set>
+            <if test="password != null">user_password = #{password},</if>
+            <if test="email != null">user_email = #{email},</if>
+            <if test="name != null">user_name = #{name},</if>
+            <if test="phoneNumber != null">user_phone_number = #{phoneNumber},</if>
+            <if test="onlineStatus!= null">user_online_status = #{onlineStatus}, </if>
+            <if test="clientId != null">user_getui_client_id = #{clientId} </if>
+            <if test="roleId!= null">user_role_id = #{roleId}, </if>
+            <if test="groupId != null">user_group_id = #{groupId} </if>
+        </set>
+        WHERE
+        user_id = #{userId}
+    </update>
+
+    <update id="updateAccessKey" parameterType="map">
+		UPDATE
+		    mss_user
+		SET
+		    user_access_key = #{accessKey}
+		WHERE user_id = #{userId}
+	</update>
+
+    <update id="updateOnlineStatus" parameterType="map">
+		UPDATE
+		    mss_user
+		SET
+		    user_online_status = #{onlineStatus}
+		WHERE user_id = #{userId}
+	</update>
+
+    <update id="updatePassword" parameterType="map">
+		UPDATE
+		    mss_user
+		SET
+		    user_password = #{password}
+		WHERE user_id = #{userId}
+	</update>
+
+    <select id="get" parameterType="map" resultMap="mapProgram">
+        SELECT
+        *
+
+        FROM
+        mss_program
+
+        <where>
+            <if test="programId !=null">program_id=#{programId}</if>
+
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapProgram">
+        SELECT
+        *
+        FROM
+        mss_program
+
+        <where>
+            <if test="tagNo!=null">program_tag_no=#{tagNo}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_program
+        <where>
+            <if test="tagNo!=null">program_tag_no=#{tagNo}</if>
+        </where>
+    </select>
+</mapper>

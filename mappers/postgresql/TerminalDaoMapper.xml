@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.TerminalDao">
+
+    <resultMap type="Terminal" id="mapTerminal">
+        <id property="terminalId" column="terminal_id"/>
+        <result property="serialNo" column="terminal_serial_no"/>
+        <result property="ipAddress" column="terminal_ip_address" />
+        <result property="port" column="terminal_port" />
+        <result property="txNo" column="terminal_tx_no" />
+        <result property="lastOnlineAt" column="terminal_last_online_at" />
+        <result property="lastOfflineAt" column="terminal_last_offline_at" />
+        <result property="onlineStatus" column="terminal_online_status" />
+        <result property="createdAt" column="terminal_created_at"/>
+        <result property="updatedAt" column="terminal_updated_at"/>
+
+        <result property="name" column="terminal_name"/>
+        <result property="terminalVersionId" column="terminal_terminal_version_id"/>
+
+        <association property="terminalVersion" javaType="TerminalVersion" resultMap="com.larcloud.dao.postgresql.TerminalVersionDao.mapTerminalVersion"/>
+
+    </resultMap>
+
+   <!-- <resultMap type="Group" id="mapGroupEx" extends="mapGroup">
+        <association property="createdBy" javaType="User" resultMap="mss.framework.server.dao.UserDao.mapUser"/>
+    </resultMap>-->
+
+    <insert id="add" parameterType="map">
+        insert into mss_terminal
+        (
+          terminal_serial_no,
+          terminal_online_status,
+          terminal_tx_no,
+          terminal_name,
+          terminal_terminal_version_id,
+          terminal_created_at
+        )
+        values(
+        #{serialNo},
+        0,
+        1,
+        #{name},
+        #{terminalVersionId},
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="terminalId">
+            select currval('mss_terminal_terminal_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map" >
+		DELETE
+		FROM
+		     mss_terminal
+		WHERE
+            terminal_id = #{terminalId}
+	</delete>
+
+    <delete id="deleteMany" parameterType="map" >
+		DELETE
+		FROM
+		     mss_terminal
+		WHERE
+            terminal_id IN
+            <foreach collection="terminalIdList" index = "index" item="item" open="(" close=")" separator=",">#{item}</foreach>
+	</delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_terminal
+
+        <set>
+            <if test="txNo != null">terminal_tx_no = #{txNo},</if>
+            <if test="ipAddress != null">terminal_ip_address = #{ipAddress},</if>
+            <if test="port != null">terminal_port = #{port},</if>
+            <if test="lastOnlineAt != null">terminal_last_online_at = #{lastOnlineAt},</if>
+            <if test="onlineStatus != null">terminal_online_status = #{onlineStatus},</if>
+            <if test="lastOfflineAt != null">terminal_last_offline_at = #{lastOfflineAt},</if>
+            <if test="name != null">terminal_name = #{name},</if>
+            <if test="terminalVersionId != null">terminal_terminal_version_id = #{terminalVersionId},</if>
+
+            terminal_updated_at=#{updatedAt}
+        </set>
+        <where>
+            <choose>
+                <when test="terminalId !=null ">
+                    terminal_id = #{terminalId}
+                </when >
+                <when test="serialNo != null">
+                    terminal_serial_no=#{serialNo}
+                </when >
+                <otherwise>
+                </otherwise>
+            </choose>
+        </where>
+    </update>
+
+    <update id="clearOnlineStatus" parameterType="map">
+        UPDATE
+        mss_terminal
+
+        <set>
+            terminal_online_status=0
+        </set>
+        <where>
+            terminal_online_status=1
+        </where>
+    </update>
+
+    <select id="get" parameterType="map"  resultMap="mapTerminal">
+		SELECT
+		*
+		FROM mss_terminal
+
+        INNER JOIN mss_terminal_version ON terminal_terminal_version_id=terminal_version_id
+
+        <where>
+            <if test="terminalVersionId!=null">terminal_terminal_version_id=#{terminalVersionId}</if>
+
+            <choose>
+                <when test="terminalId !=null ">
+                    terminal_id = #{terminalId}
+                </when >
+                <when test="serialNo != null">
+                    terminal_serial_no=#{serialNo}
+                </when >
+                <otherwise>
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapTerminal">
+        SELECT
+        *
+        FROM mss_terminal
+
+        INNER JOIN mss_terminal_version ON terminal_terminal_version_id=terminal_version_id
+
+        <where>
+            <if test="terminalVersionId!=null">terminal_terminal_version_id=#{terminalVersionId}</if>
+
+
+            <choose>
+                <when test="serialNo__IN !=null ">
+                    terminal_serial_no in <foreach collection="serialNo__IN" item="item"  open="(" separator="," close=")"> #{item} </foreach>
+                </when >
+                <when test="terminalId__IN !=null ">
+                    terminal_id in <foreach collection="terminalId__IN" item="item"  open="(" separator="," close=")"> #{item} </foreach>
+                </when >
+
+                <when test="serialNo__LIKE !=null ">
+                    terminal_serial_no LIKE #{serialNo__LIKE}
+                </when >
+                <otherwise>
+                </otherwise>
+            </choose>
+            <if test="onlineStatus != null">
+                AND terminal_online_status=#{onlineStatus}
+            </if>
+
+        </where>
+        <if test="sortingField != null">ORDER BY ${sortingField} ${sortingDirection}</if>
+        <if test="pageSize != null">LIMIT #{pageSize} OFFSET (#{pageNumber}-1)*#{pageSize}</if>
+    </select>
+
+    <select id="count" parameterType="map" resultType="Integer">
+
+        SELECT
+        count(*)
+        FROM
+          mss_terminal
+        <where>
+            <choose>
+                <when test="serialNo__IN !=null ">
+                    terminal_serial_no in <foreach collection="serialNo__IN" item="item"  open="(" separator="," close=")"> #{item} </foreach>
+                </when >
+                <when test="serialNo__LIKE !=null ">
+                    terminal_serial_no LIKE #{serialNo__LIKE}
+                </when >
+                <otherwise>
+                </otherwise>
+            </choose>
+            <if test="onlineStatus != null">
+                AND terminal_online_status=#{onlineStatus}
+            </if>
+
+        </where>
+
+    </select>
+
+
+</mapper>

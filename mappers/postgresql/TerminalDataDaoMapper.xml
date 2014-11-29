@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.TerminalDataDao">
+
+    <resultMap type="TerminalData" id="mapTerminalData">
+        <id property="terminalDataId" column="terminal_data_id"/>
+        <result property="typeId" column="terminal_data_type_id"/>
+        <result property="valueDouble" column="terminal_data_value_double" />
+        <result property="valueString" column="terminal_data_value_string" />
+        <result property="terminalId" column="terminal_data_terminal_id"/>
+        <result property="createdAt" column="terminal_data_created_at"/>
+    </resultMap>
+
+    <!-- <resultMap type="Group" id="mapGroupEx" extends="mapGroup">
+        <association property="createdBy" javaType="User" resultMap="mss.framework.server.dao.UserDao.mapUser"/>
+    </resultMap>-->
+
+    <insert id="add" parameterType="map">
+        insert into mss_terminal_data
+        (
+        terminal_data_type_id,
+        terminal_data_terminal_id,
+        terminal_data_value_double,
+        terminal_data_value_string,
+        terminal_data_created_at
+        )
+        values(
+        #{typeId},
+        #{terminalId},
+        #{valueDouble},
+        #{valueString},
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="terminalDataId">
+            select currval('mss_terminal_data_terminal_data_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map" >
+		DELETE
+		FROM
+		     mss_terminal_data
+		WHERE
+            terminal_data_id = #{terminalDataId}
+	</delete>
+
+    <update id="update" parameterType="map">
+
+    </update>
+
+    <select id="get" parameterType="map"  resultMap="mapTerminalData">
+		SELECT
+		*
+		FROM mss_terminal_data
+
+		WHERE
+            terminal_data_id = #{terminalDataId}
+	</select>
+
+    <select id="list" parameterType="map" resultMap="mapTerminalData">
+
+        SELECT
+        *
+        FROM
+        mss_terminal_data
+
+        <where>
+            <if test="terminalId != null">
+                terminal_data_terminal_id=#{terminalId}
+            </if>
+            <if test="typeId != null">
+                AND terminal_data_type_id=#{typeId}
+            </if>
+            <if test="createdAtFrom != null">
+                AND terminal_data_created_at &lt;= #{createdAtTo} AND terminal_data_created_at &gt;= #{createdAtFrom}
+            </if>
+        </where>
+        ORDER BY ${sortingField} ${sortingDirection}
+        LIMIT #{pageSize} OFFSET (#{pageNumber}-1)*#{pageSize};
+    </select>
+
+    <select id="count" parameterType="map" resultType="Integer">
+        SELECT
+        count(*)
+        FROM
+        mss_terminal_data
+
+        <where>
+            <if test="terminalId != null">
+                terminal_data_terminal_id=#{terminalId}
+            </if>
+            <if test="typeId != null">
+                AND terminal_data_type_id=#{typeId}
+            </if>
+            <if test="createdAtFrom != null">
+                AND terminal_data_created_at &lt;= #{createdAtTo} AND terminal_data_created_at &gt;= #{createdAtFrom}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="sum" parameterType="map" resultType="Double">
+        SELECT
+        SUM(terminal_data_value_double)
+        FROM
+        mss_terminal_data
+
+        WHERE
+            terminal_data_terminal_id=#{terminalId}
+            <if test="typeId != null">
+                AND terminal_data_type_id=#{typeId}
+            </if>
+            <if test="createdAtFrom != null">
+                AND terminal_data_created_at &lt;= #{createdAtTo} AND terminal_data_created_at &gt;= #{createdAtFrom}
+            </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.ProgramDownloadDao">
+
+    <resultMap type="ProgramDownload" id="mapProgramDownload">
+        <id property="programDownloadId" column="program_download_id"/>
+        <result property="status" column="program_download_status"/>
+        <result property="filePath" column="program_download_file_location"/>
+        <result property="createdAt" column="program_download_created_at"/>
+        <result property="orderId" column="program_download_order_id"/>
+
+        <association property="order" javaType="Order" resultMap="com.larcloud.dao.postgresql.OrderDao.mapOrder"/>
+        <association property="createdBy" javaType="User" resultMap="com.larcloud.dao.postgresql.UserDao.mapUser"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_program_download
+        (
+        program_download_created_at,
+        program_download_created_by,
+        program_download_status,
+        program_download_file_location,
+        program_download_order_id
+        )
+        VALUES(
+        #{createdAt},
+        #{createdBy},
+        1,
+        #{filePath},
+        #{orderId}
+        )
+        <selectKey resultType="int" keyProperty="programId">
+            select currval('mss_program_download_program_download_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_program_download
+        WHERE
+            program_download_id=#{programDownloadId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_program_download
+        <set>
+            <if test="status != null">program_download_status = #{status},</if>
+            <if test="filePath != null">program_download_file_location = #{filePath}</if>
+            <!--<if test="orderId != null">program_download_order_id = #{orderId}</if>-->
+        </set>
+        WHERE
+            <!--<if test="programDownloadId !=null">program_download_id=#{programDownloadId}</if>-->
+            <if test="orderId!=null">program_download_order_id = #{orderId}</if>
+
+    </update>
+
+
+    <select id="get" parameterType="map" resultMap="mapProgramDownload">
+        SELECT
+        *
+
+        FROM
+        mss_program_download
+
+        <where>
+            <if test="programDownloadId !=null">program_download_id=#{programDownloadId}</if>
+
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapProgramDownload">
+        SELECT
+        *
+        FROM
+        mss_program_download
+
+        INNER JOIN mss_user ON program_download_created_by=user_id
+        INNER JOIN mss_order ON program_download_order_id=order_id <if test="tagNo!=null">AND order_tag_no = #{tagNo}</if>
+
+        <where>
+            <if test="createdBy!=null">program_download_created_by=#{createdBy}</if>
+            <if test="createdAtTo!=null">AND program_download_created_at &lt;= #{createdAtTo}</if>
+            <if test="createdAtFrom!=null">AND program_download_created_at &gt;= #{createdAtFrom}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_program_download
+        <where>
+            <if test="createdBy!=null">program_download_created_by=#{createdBy}</if>
+            <if test="createdAtTo!=null">AND program_download_created_at &lt;= #{createdAtTo}</if>
+            <if test="createdAtFrom!=null">AND program_download_created_at &gt;= #{createdAtFrom}</if>
+
+        </where>
+    </select>
+</mapper>

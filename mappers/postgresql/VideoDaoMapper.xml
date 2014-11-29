@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.VideoDao">
+
+    <resultMap type="Video" id="mapVideo">
+        <id property="videoId" column="video_id"/>
+        <result property="filePath" column="video_file_path"/>
+        <result property="status" column="video_status"/>
+        <result property="cameraId" column="video_camera_id"/>
+        <result property="createdAt" column="video_created_at"/>
+        <result property="updatedAt" column="video_updated_at"/>
+        <association property="camera" javaType="Camera" resultMap="com.larcloud.dao.postgresql.CameraDao.mapCamera"/>
+        
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_video
+        (
+        
+        video_camera_id,
+        
+        video_status,
+        video_created_at
+        )
+        VALUES(
+        #{cameraId},
+       
+        #{status},
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="videoId">
+            select currval('mss_video_video_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_video
+        WHERE
+            video_id=#{videoId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_video
+        <set>
+            <if test="status != null">video_status = #{status},</if>
+            <if test="updatedAt != null">video_updated_at = #{updatedAt},</if>
+            <if test="filePath != null">video_file_path = #{filePath}</if>
+        </set>
+        WHERE
+        video_id = #{videoId}
+    </update>
+
+
+
+
+    <select id="get" parameterType="map" resultMap="mapVideo">
+        SELECT
+        *
+
+        FROM
+        mss_video
+        INNER JOIN mss_camera ON video_camera_id=camera_id
+
+        <where>
+            <if test="videoId !=null">video_id=#{videoId}</if>
+
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapVideo">
+        SELECT
+        *
+        FROM
+        mss_video
+
+        INNER JOIN mss_camera ON video_camera_id=camera_id
+
+
+        <where>
+
+            <if test="cameraId!=null">video_camera_id=#{cameraId}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_video
+        <where>
+
+            <if test="cameraId!=null">video_camera_id=#{cameraId}</if>
+
+        </where>
+    </select>
+</mapper>

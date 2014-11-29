@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.TerminalInstructionDao">
+
+    <resultMap type="TerminalInstruction" id="mapTerminalInstruction">
+        <id property="terminalInstructionId" column="terminal_instruction_id"/>
+        <result property="typeId" column="terminal_instruction_type_id"/>
+        <result property="status" column="terminal_instruction_status"/>
+        <result property="terminalId" column="terminal_instruction_terminal_id"/>
+
+        <result property="createdAt" column="terminal_instruction_created_at"/>
+        <result property="dataJson" column="terminal_instruction_data"/>
+        <result property="taskId" column="terminal_instruction_task_id"/>
+
+        <association property="terminal" javaType="Terminal" resultMap="com.larcloud.dao.postgresql.TerminalDao.mapTerminal"/>
+        <association property="createdBy" javaType="User" resultMap="com.larcloud.dao.postgresql.UserDao.mapUser"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_terminal_instruction
+        (
+        terminal_instruction_type_id,
+        terminal_instruction_status,
+        terminal_instruction_data,
+        terminal_instruction_terminal_id,
+        terminal_instruction_task_id,
+        terminal_instruction_tx_no,
+        terminal_instruction_created_at,
+        terminal_instruction_created_by
+        )
+        VALUES(
+
+        #{typeId},
+        #{status},
+        #{dataJson},
+        #{terminalId},
+        #{taskId},
+        #{txNo},
+        #{createdAt},
+        #{createdBy}
+        )
+        <selectKey resultType="int" keyProperty="terminalInstructionId">
+            select currval('mss_terminal_instruction_terminal_instruction_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_terminal_instruction
+        WHERE
+            terminal_instruction_id=#{terminalInstructionId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_terminal_instruction
+        <set>
+            <if test="status != null">terminal_instruction_status= #{status},</if>
+            <if test="updatedAt != null">terminal_instruction_updated_at= #{updatedAt}</if>
+        </set>
+        <where>
+            <if test="terminalInstructionId !=null">terminal_instruction_id=#{terminalInstructionId}</if>
+            <if test="terminalId !=null"> AND terminal_instruction_terminal_id=#{terminalId}</if>
+            <if test="txNo !=null"> AND terminal_instruction_tx_no=#{txNo}</if>
+        </where>
+    </update>
+
+
+
+    <select id="get" parameterType="map" resultMap="mapTerminalInstruction">
+        SELECT
+        *
+
+        FROM
+        mss_terminal_instruction
+        LEFT JOIN mss_terminal ON terminal_instruction_terminal_id=terminal_id
+        LEFT JOIN mss_user ON terminal_instruction_created_by=user_id
+        <where>
+            <if test="terminalInstructionId !=null">terminal_instruction_id=#{terminalInstructionId}</if>
+            <if test="terminalId !=null"> AND terminal_instruction_terminal_id=#{terminalId}</if>
+            <if test="txNo !=null"> AND terminal_instruction_tx_no=#{txNo}</if>
+        </where>
+
+    </select>
+
+
+
+
+
+    <select id="list" parameterType="map" resultMap="mapTerminalInstruction">
+        SELECT
+        *
+        FROM
+        mss_terminal_instruction
+        LEFT JOIN mss_terminal ON terminal_instruction_terminal_id=terminal_id
+        LEFT JOIN mss_user ON terminal_instruction_created_by=user_id
+        <where>
+            <if test="terminalId!=null">terminal_instruction_terminal_id=#{terminalId}</if>
+            <if test="typeId!=null">AND terminal_instruction_type_id=#{typeId}</if>
+            <if test="status!=null">AND terminal_instruction_status=#{status}</if>
+            <if test="taskId!=null">AND terminal_instruction_task_id=#{taskId}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_terminal_instruction
+        <where>
+            <if test="terminalId!=null">terminal_instruction_terminal_id=#{terminalId}</if>
+            <if test="typeId!=null">AND terminal_instruction_type_id=#{typeId}</if>
+            <if test="status!=null">AND terminal_instruction_status=#{status}</if>
+            <if test="taskId!=null">AND terminal_instruction_task_id=#{taskId}</if>
+        </where>
+    </select>
+</mapper>

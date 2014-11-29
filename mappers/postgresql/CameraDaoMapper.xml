@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.CameraDao">
+
+    <resultMap type="Camera" id="mapCamera">
+        <id property="cameraId" column="camera_id"/>
+        <result property="status" column="camera_status"/>
+        <result property="typeId" column="camera_type_id"/>
+        <result property="createdAt" column="camera_created_at"/>
+        <result property="updatedAt" column="camera_updated_at"/>
+        <result property="recordStartedAt" column="camera_record_started_at"/>
+        <result property="name" column="camera_name"/>
+        <association property="terminal" javaType="Terminal" resultMap="com.larcloud.dao.postgresql.TerminalDao.mapTerminal"/>
+        <association property="group" javaType="Group" resultMap="com.larcloud.dao.postgresql.GroupDao.mapGroup"/>
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_camera
+        (
+        camera_name,
+        camera_terminal_id,
+        camera_group_id,
+        camera_status,
+        camera_type_id,
+        camera_created_at
+        )
+        VALUES(
+        #{name},
+        #{terminalId},
+        #{groupId},
+        0,
+        1,
+        #{createdAt}
+        )
+        <selectKey resultType="int" keyProperty="cameraId">
+            select currval('mss_camera_camera_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_camera
+        WHERE
+            camera_id=#{cameraId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_camera
+        <set>
+            <if test="name != null">camera_name = #{name},</if>
+            <if test="terminalId != null">camera_terminal_id = #{terminalId},</if>
+            <if test="status != null">camera_status = #{status},</if>
+            <if test="typeId != null">camera_type_id = #{typeId},</if>
+            <if test="updatedAt != null">camera_updated_at = #{updatedAt},</if>
+            <if test="groupId != null">camera_group_id = #{groupId},</if>
+            <if test="recordStartedAt != null">camera_record_started_at = #{recordStartedAt}</if>
+        </set>
+        WHERE
+            camera_id=#{cameraId}
+    </update>
+
+    <update id="updateStatus" parameterType="map">
+		UPDATE
+		    mss_camera
+		SET
+		    camera_status = #{status}
+		WHERE
+		    camera_id=#{cameraId}
+
+	</update>
+
+    <select id="get" parameterType="map" resultMap="mapCamera">
+        SELECT
+        *
+
+        FROM
+        mss_camera
+        INNER JOIN mss_terminal ON camera_terminal_id=terminal_id
+        INNER JOIN mss_group ON camera_group_id=group_id
+        <where>
+            <if test="cameraId !=null">camera_id=#{cameraId}</if>
+
+        </where>
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapCamera">
+        SELECT
+        *
+        FROM
+        mss_camera
+
+        INNER JOIN mss_terminal ON camera_terminal_id=terminal_id
+        INNER JOIN mss_group ON camera_group_id=group_id
+
+        <where>
+
+            <if test="terminalId!=null">camera_terminal_id=#{terminalId}</if>
+            <if test="groupId!=null">AND camera_group_id=#{groupId}</if>
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_camera
+        <where>
+
+            <if test="terminalId!=null">camera_terminal_id=#{terminalId}</if>
+            <if test="groupId!=null">AND camera_group_id=#{groupId}</if>
+        </where>
+    </select>
+</mapper>

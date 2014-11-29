@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.larcloud.dao.postgresql.ProgramItemDao">
+
+    <resultMap type="ProgramItem" id="mapProgramItem">
+        <id property="programItemId" column="program_item_id"/>
+
+        <result property="tagNo" column="program_item_tag_no"/>
+        <result property="cameraId" column="program_item_camera_id"/>
+        <result property="createdAt" column="program_item_created_at"/>
+        <result property="endAt" column="program_item_end_at"/>
+        <result property="startAt" column="program_item_start_at"/>
+        <result property="status" column="program_item_status"/>
+        <association property="camera" javaType="Camera" resultMap="com.larcloud.dao.postgresql.CameraDao.mapCamera"/>
+        <association property="terminal" javaType="Terminal" resultMap="com.larcloud.dao.postgresql.TerminalDao.mapTerminal"/>
+        <association property="createdBy" javaType="User" resultMap="com.larcloud.dao.postgresql.UserDao.mapUser"/>
+        <association property="video" javaType="Video" resultMap="com.larcloud.dao.postgresql.VideoDao.mapVideo"/>
+
+    </resultMap>
+
+    <insert id="add" parameterType="map">
+        INSERT INTO mss_program_item
+        (
+            program_item_tag_no,
+            program_item_camera_id,
+            program_item_terminal_id,
+            program_item_status,
+            program_item_created_at,
+            program_item_created_by,
+            program_item_start_at,
+            program_item_video_id
+        )
+        VALUES(
+            #{tagNo},
+            #{cameraId},
+            #{terminalId},
+            #{status},
+            #{createdAt},
+            #{createdBy},
+            #{startAt},
+            #{videoId}
+        )
+        <selectKey resultType="int" keyProperty="programItemId">
+            select currval('mss_program_item_program_item_id_seq')
+        </selectKey>
+    </insert>
+
+    <delete id="delete" parameterType="map">
+        DELETE FROM
+            mss_program_item
+        WHERE
+            program_item_id=#{programItemId}
+    </delete>
+
+    <update id="update" parameterType="map">
+        UPDATE
+        mss_program_item
+        <set>
+            <if test="status != null">program_item_status = #{status}</if>
+            <if test="endAt != null">,program_item_end_at = #{endAt}</if>
+        </set>
+        <where>
+            <if test="programItemId != null">program_item_id = #{programItemId} </if>
+
+            <if test="terminalId != null">AND program_item_terminal_id = #{terminalId}</if>
+            <if test="tagNo != null">AND program_item_tag_no = #{tagNo}</if>
+        </where>
+    </update>
+
+    <select id="get" parameterType="map" resultMap="mapProgramItem">
+        SELECT
+            *
+        FROM
+            mss_program_item
+        <where>
+            <if test="programItemId !=null">program_item_id=#{programItemId}</if>
+            <if test="terminalId != null">AND program_item_terminal_id = #{terminalId}</if>
+            <if test="tagNo != null">AND program_item_tag_no = #{tagNo}</if>
+            <if test="cameraId != null">AND program_item_camera_id = #{cameraId}</if>
+
+        </where>
+        ORDER BY program_item_id DESC
+        LIMIT 1
+
+    </select>
+
+    <select id="list" parameterType="map" resultMap="mapProgramItem">
+        SELECT
+        *
+        FROM
+        mss_program_item
+
+        LEFT JOIN mss_camera ON program_item_camera_id=camera_id
+        LEFT  JOIN mss_group ON camera_group_id=group_id
+        LEFT  JOIN mss_video ON program_item_video_id=video_id
+        LEFT JOIN mss_terminal ON program_item_terminal_id=terminal_id
+        LEFT JOIN mss_user ON program_item_created_by=user_id
+
+        <where>
+            <if test="tagNo!=null">program_item_tag_no = #{tagNo}</if>
+            <if test="cameraId!=null">program_item_camera_id=#{cameraId}</if>
+            <if test="terminalId!=null">program_item_terminal_id=#{terminalId}</if>
+            <if test="createdAtTo!=null">AND program_item_created_at &lt;= #{createdAtTo}</if>
+            <if test="createdAtFrom!=null">AND program_item_created_at &gt;= #{createdAtFrom}</if>
+
+        </where>
+        <if test="sortingField!=null">
+            ORDER BY ${sortingField} ${sortingDirection}
+        </if>
+        <if test="pageSize!=null">
+            LIMIT #{pageSize}
+        </if>
+        <if test="pageNumber!=null and pageSize != null">
+            OFFSET (#{pageNumber}-1)*#{pageSize};
+        </if>
+
+
+    </select>
+
+    <select id="count" parameterType="map" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM
+        mss_program_item
+        <where>
+            <if test="tagNo!=null">program_item_tag_no = #{tagNo}</if>
+            <if test="cameraId!=null">program_item_camera_id=#{cameraId}</if>
+            <if test="terminalId!=null">program_item_terminal_id=#{terminalId}</if>
+            <if test="createdAtTo!=null">AND program_item_created_at &lt;= #{createdAtTo}</if>
+            <if test="createdAtFrom!=null">AND program_item_created_at &gt;= #{createdAtFrom}</if>
+
+        </where>
+    </select>
+</mapper>
